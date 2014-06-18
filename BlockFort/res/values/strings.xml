@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    
+    <item type="id" name="BLOCK_TYPE_TAG" />
+    <item type="id" name="BLOCK_DRAWABLE_TAG" />
+
+    <string name="app_name">Block Fort</string>
+    <string name="home_title_text">Block Fort Title</string>
+    <string name="new_game_button_text">New Game</string>
+    <string name="load_game_button_text">Load Game</string>
+    <string name="join_game_button_text">Join Network Game</string>
+    <string name="play_coop_button_text">Play Co-op</string>
+    <string name="options_button_text">Options</string>
+    <string name="save_button_text">Save</string>
+    <string name="blocks_button_text">Blocks</string>
+    <string name="block_content_description">A block&#8230;</string>
+    <string name="game_menu_hide_button_text">Hide Menu</string>
+    <string name="save_game_json_button">Save with JSON</string>
+
+</resources>
