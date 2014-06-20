@@ -17,13 +17,6 @@
             android:layout_weight="1"
             android:text="@string/blocks_button_text" />
 
-        <Button
-            android:id="@+id/optionsGameMenuButton"
-            style="?attr/buttonBarButtonStyle"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:text="@string/save_button_text" />
         
         <Button 
             android:id="@+id/saveJsonMenuButton"
@@ -31,7 +24,7 @@
             android:layout_width="0dp"
             android:layout_height="wrap_content"
             android:layout_weight="1"
-            android:text="@string/save_game_json_button"/>
+            android:text="@string/save_button_text"/>
     </LinearLayout>
 
     <LinearLayout

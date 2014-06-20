@@ -107,7 +107,7 @@ public class HomeFragment extends Fragment implements OnClickListener {
 				// if there's a saved game, set the adapter and enable the load button to hide/show the list of saved games
 				if (saveArray.length() > 0) {
 					final ListView savedGamesList = (ListView) view.findViewById(R.id.load_game_list);
-					ArrayList<String> savedGameNames = new ArrayList<>();
+					ArrayList<String> savedGameNames = new ArrayList<String>();
 					for (int i=0; i<saveArray.length(); i++) {
 						JSONObject savedGame = saveArray.getJSONObject(i);
 						savedGameNames.add(savedGame.getString("name"));
@@ -133,9 +133,11 @@ public class HomeFragment extends Fragment implements OnClickListener {
 				} else {
 					view.findViewById(R.id.load_game_button).setEnabled(false);
 				}
-			} catch (FileNotFoundException | JSONException e) {
-				// TODO Auto-generated catch block
+			} catch (FileNotFoundException e) {
 				e.printStackTrace();
+			} catch (JSONException e) {
+				e.printStackTrace();
+				
 			}
 		// No saved game file, we don't need the load button
 		} else {

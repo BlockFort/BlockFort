@@ -5,7 +5,9 @@ import org.jbox2d.common.Vec2;
 
 import edu.wwu.cs412.blockfort.physics.PhysicsZone;
 import android.graphics.*;
+import android.util.DisplayMetrics;
 import android.util.Log;
+import android.view.Display;
 
 public class Sprite implements Serializable {
 	/**
@@ -32,6 +34,7 @@ public class Sprite implements Serializable {
 	public Sprite(GameView gameView, int toBmp, int x, int y, float ang){
 		Rid = toBmp;
 		this.bmp = BitmapFactory.decodeResource(gameView.getContext().getResources(), toBmp);
+		this.bmp.setDensity(DisplayMetrics.DENSITY_MEDIUM);
 		OrgBitmap = bmp;
 		this.x = x;
 		this.y = y;

@@ -80,11 +80,12 @@ public class BlockData {
 	private int blockType;
 	
 	private static final float MAX_PULL_FORCE = 12f;
+	
+	public Vec2 goTo = null;
 
 	public BlockData(Body newBody, int blockType) {
 		body = newBody;
 	}
-	
 	
 	public BlockData(Body newBody, int blockType, float angularVel, Vec2 linearVel, float rotation) {
 		body = newBody;
@@ -131,47 +132,46 @@ public class BlockData {
 	}
 	
 	//Push block to a specific point if not there.
-	public void pushTo(float dist, float angle, Vec2 fingerP){
+	public void pushTo(Vec2 relPos, Vec2 fingerP){
 		Vec2 bodyPosition = body.getPosition().clone();
+			
+		Vec2 newVec = rotVec(relPos);
 
-		// placeholder:  this just pulls based on the object's center of mass
-		float x = (fingerP.x-bodyPosition.x);
-		float y = (fingerP.y-bodyPosition.y);
+		float x = (bodyPosition.x-newVec.x);//Place where you initially touched the block.
+		float y = (bodyPosition.y-newVec.y);//It now takes into account the rotation of the block.
 		
-		double force = Math.sqrt(x*x+y*y);//hypotenuse 
-		double forceAngle = Math.atan(y/x);
-		float sign = Math.signum(x);
+		Vec2 BlockPos = new Vec2(x,y);
 		
-		/*if (force > MAX_PUSH_FORCE*MAX_PUSH_FORCE) {
-			// if force is too large, reduce force
-			force = Math.sqrt(force);
-			x = (float)(MAX_PUSH_FORCE*x/force);
-			y = (float)(MAX_PUSH_FORCE*y/force);
-		}*/
+		//Log.d("CHECK", "HERE AND NOW");
 		
-		float Lessen = 2;//THIS IS WHERE I STOPPED WORKING
-		if(x+y == 0){
-			Lessen = 0;
+		if(BlockPos != fingerP) {//This might actually be removable, might not be necessary.
+			Vec2 tmpVec = body.getLinearVelocity();
+			
+			Vec2 Force = new Vec2((fingerP.x-x), (fingerP.y-y));
+			//if(Math.abs(Force.x) + Math.abs(Force.y) < .5 && Math.abs(tmpVec.x)+Math.abs(tmpVec.y) != 0) {//The second part of this if probably needs to be rethought.
+			//Force = tmpVec.negate(); Log.d("newCheck", "THIS "+Force);//This checks where it is already moving and applies an opposite force to stop it moving.
+			//}
+			//else{
+			//Force.normalize();//Makes it a unit vector, i.e. it has a magnitude of 1 now.
+				//Force.mulLocal(5); Can be used to make things move faster and slower
+			//}
+			
+			//body.setGravityScale(0);
+			//body.applyForceToCenter(Force.mul(body.getMass()));
+			//body.applyLinearImpulse(Force.mul(body.getMass()), BlockPos);
+			//body.setGravityScale(1);
 		}
-		else if(x+y > 0 && x+y < 2){
-			Lessen = (float)1;
-			Log.d("Close", "In Zone 0 to .5 - " + Lessen);
-		}
-		else{
-			Lessen = (float)4;
-			Log.d("Close", "In Zone .5 to 1.5 - " + Lessen);
-		}
-		Vec2 Force = new Vec2(
-				(float)(sign*force*Math.cos(forceAngle)*Lessen), 
-				(float)(sign*force*Math.sin(forceAngle)*Lessen));
 		
-		body.setLinearVelocity(Force);
-}
-
-	public void push(int xStrength, int yStrength, 
-			int xStart, int yStart) {
-		push((float)xStrength,(float)yStrength,
-				(float)xStart,(float)yStart);
+		goTo = fingerP;
+				
+		body.setLinearVelocity(new Vec2(fingerP.sub(bodyPosition)));
+	}
+	
+	private Vec2 rotVec(Vec2 vec) { //This Method rotates the point and returns the proper relative position.
+		float magnitude = (float) Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2));
+		float angle = (float) Math.atan(vec.y/vec.x);
+		angle -= body.getAngle();//Math is correct, but this could cause problems
+		return new Vec2((float)Math.cos(angle)*magnitude, (float)Math.sin(angle)*magnitude);
 	}
 	
 	/**
@@ -292,13 +292,13 @@ public class BlockData {
 		// rotation.  This new point is the value returned.
 		//relativePoint.x /= Math.cos(-body.getAngle());
 		//relativePoint.y /= Math.sin(-body.getAngle());
-		
-		float distance = (float) Math.sqrt(
+		//I am taking this out for now and trying something new.
+		/*float distance = (float) Math.sqrt(
 				Math.pow(relativePoint.x,2)+Math.pow(relativePoint.x,2));
 		float angle = (float)Math.acos(relativePoint.x / distance);
-		angle -= body.getAngle(); // corrects for current rotation
-		
-		return new Vec2(distance,angle);
+		angle -= body.getAngle();*/ // corrects for current rotation
+				
+		return relativePoint;
 	}
 	
 	

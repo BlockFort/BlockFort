@@ -67,6 +67,10 @@ public class PhysicsZone {
 
 	private ArrayList<Vec2> blockCreationPositionQueue = new ArrayList<Vec2>();
 	private ArrayList<Integer> blockCreationTypeQueue = new ArrayList<Integer>();
+
+	private ArrayList<Float> blockCreationRotationQueue = new ArrayList<Float>();
+	private ArrayList<Float> blockCreationAngularVelQueue = new ArrayList<Float>();
+	private ArrayList<Vec2> blockCreationLinearVelQueue = new ArrayList<Vec2>();
 	
 	
 	
@@ -216,7 +220,10 @@ public class PhysicsZone {
 		// creates all shapes
 
 		for (int i = 0; i < blockCreationTypeQueue.size(); i++) {
-			createBlock(blockCreationTypeQueue.get(i),blockCreationPositionQueue.get(i));
+			createBlock(blockCreationTypeQueue.get(i),blockCreationPositionQueue.get(i),
+					blockCreationRotationQueue.get(i), 
+					blockCreationLinearVelQueue.get(i),
+					blockCreationAngularVelQueue.get(i));
 		}
 		blockCreationPositionQueue.clear();
 		blockCreationTypeQueue.clear();
@@ -238,8 +245,23 @@ public class PhysicsZone {
 	public int queueNewBlock(int blockTypeID, Vec2 position) {
 		blockCreationPositionQueue.add(position);
 		blockCreationTypeQueue.add(blockTypeID);
+		blockCreationLinearVelQueue.add(new Vec2(0,0));
+		blockCreationAngularVelQueue.add(0f);
+		blockCreationRotationQueue.add(0f);
 		return blockList.size()+blockCreationTypeQueue.size()-1;
 	}
+
+	public int queueNewBlock(int blockTypeID, Vec2 position, float rotation,
+			Vec2 linearVelocity, float angularVelocity) {
+		blockCreationPositionQueue.add(position);
+		blockCreationTypeQueue.add(blockTypeID);
+		blockCreationLinearVelQueue.add(linearVelocity);
+		blockCreationAngularVelQueue.add(angularVelocity);
+		blockCreationRotationQueue.add(rotation);
+		return blockList.size()+blockCreationTypeQueue.size()-1;
+	}
+	
+	
 	
 	/**
 	 * creates a new block and returns that block's id
@@ -270,7 +292,7 @@ public class PhysicsZone {
 	 * @param position
 	 * @return blockID
 	 */
-	public int createBlock(int blockTypeID, Vec2 position, float rotation,
+	private int createBlock(int blockTypeID, Vec2 position, float rotation,
 			Vec2 linearVelocity, float angularVelocity) {
 		
 		BodyDef blockDef = new BodyDef();
@@ -411,9 +433,9 @@ public class PhysicsZone {
 		} else if (shapeTypeID == BlockData.BLOCK_SHAPE_TRIANGLE) {
 			// creates an equilateral triangle
 			Vec2[] vertices = {
-				new Vec2(         0,  sm * 0.649519052838329f),
-				new Vec2(  sm * -3/4f,  sm * -3/4f),
-				new Vec2(  sm *  3/4f,  sm * 3/4f)
+					new Vec2(  sm * 0,  sm * 0.433f),
+					new Vec2(  sm * 2/4,  sm * -0.433f),
+					new Vec2(  sm * -2/4f,  sm * -0.433f)
 			};
 				
 			// creates shapes
@@ -438,12 +460,12 @@ public class PhysicsZone {
 			FixtureDef blockFix = new FixtureDef();
 			blockFix.shape = polyShape;
 			blockFixList.add(blockFix);
-		} else if (shapeTypeID == BlockData.BLOCK_SHAPE_SPIKE) {
+		} /*else if (shapeTypeID == BlockData.BLOCK_SHAPE_SPIKE) {
 			// creates an equilateral triangle
 			Vec2[] vertices = {
-				new Vec2(         0,  sm * 1f),
-				new Vec2(  sm * -0.25f,  sm * -1f),
-				new Vec2(  sm *  0.25f,  sm * -1f)
+				new Vec2(  0,  sm * 1f),
+				new Vec2(  sm * -1/2f,  sm * -1/4f),
+				new Vec2(  sm *  -1/4f,  sm * -1/4f)
 			};
 				
 			// creates shapes
@@ -453,7 +475,7 @@ public class PhysicsZone {
 			FixtureDef blockFix = new FixtureDef();
 			blockFix.shape = polyShape;
 			blockFixList.add(blockFix);
-		} else {
+		} */else {
 			// placeholder shape: if an inappropriate shape is given,
 			// default to a square
 			PolygonShape polyShape = new PolygonShape();
@@ -569,6 +591,10 @@ public class PhysicsZone {
 		return blockList.size();
 	}
 	
+	public Vec2 getBlockDest(int blockID) {
+		return blockList.get(blockID).goTo;
+	}
+	
 	/**
 	 * 
 	 * @param position
@@ -604,10 +630,10 @@ public class PhysicsZone {
 	 * @param grabP Position on the block where it is grabbed
 	 * @param fingerP Position in the world where finger is
 	 */
-	public boolean pushBlock(int blockID, float dist, float angle, Vec2 fingerP) {
+	public boolean pushBlock(int blockID, Vec2 relativeVec, Vec2 fingerP) {
 
 		if (blockID > -1 && !midStep) {
-			blockList.get(blockID).pushTo(dist, angle, fingerP);
+			blockList.get(blockID).pushTo(relativeVec, fingerP);
 			return true;
 		}
 		return false;
@@ -615,6 +641,10 @@ public class PhysicsZone {
 	
 	public Vec2 getGroundPosition() {
 		return new Vec2(FLOOR_WIDTH*0.5f,1.15625f);
+	}
+	
+	public static Vec2 getGravity() {
+		return BASIC_GRAVITY;
 	}
 	
 	

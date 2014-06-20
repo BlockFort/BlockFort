@@ -316,14 +316,6 @@ public class GameActivity extends FragmentActivity {
 			}
 		});
 		
-		findViewById(R.id.optionsGameMenuButton).setOnClickListener(new OnClickListener() {//Big note here. Since we aren't using options I switched this to save, at least for now.
-			
-			@Override
-			public void onClick(View v) {
-				Save();				
-			}
-		});
-		
 		findViewById(R.id.saveJsonMenuButton).setOnClickListener(new OnClickListener() {
 			
 			@Override
@@ -347,15 +339,20 @@ public class GameActivity extends FragmentActivity {
 			// If the file exists, we need to read the JSONArray from the file
 			if (file.exists()) {
 				try {
-					Scanner scanner = new Scanner(file);
-					StringBuilder builder = new StringBuilder();
-					while (scanner.hasNextLine()) {
-						builder.append(scanner.nextLine());
+					try {
+						Scanner scanner = new Scanner(file);
+						StringBuilder builder = new StringBuilder();
+						while (scanner.hasNextLine()) {
+							builder.append(scanner.nextLine());
+						}
+						saveArray = new JSONArray(builder.toString());
+						scanner.close();
+					} catch (FileNotFoundException e) {
+						e.printStackTrace();
 					}
-					saveArray = new JSONArray(builder.toString());
-					scanner.close();
-				} catch (FileNotFoundException | JSONException e) {
+				} catch (JSONException e) {
 					e.printStackTrace();
+					
 				}
 			// Otherwise, the array will be a new JSONArray
 			} else {
@@ -368,64 +365,68 @@ public class GameActivity extends FragmentActivity {
 			// Files will be saved as SaveGameN where n=the count of saved games
 			String saveName = String.format("SaveGame%3d", saveArray.length()+1);
 			try {
-				// add the name to key "name"
-				newSaveObject.put("name", saveName);
-				// for each block...
-				for (int i=0; i<spriteList.size(); i++) {
-					// each block is represented in the save file as a JSONObject
-					JSONObject singleBlockObject = new JSONObject();
-					// get the corresponding block form the sprite and block lists
-					Sprite sprite = spriteList.get(i);
-					BlockData block = blockList.get(i);
-					int[] spriteData = sprite.data();
-					
-					// save sprite information
-					int Rid = spriteData[0];
-					int spriteX = spriteData[1];
-					int spriteY = spriteData[2];
-					double spriteAng = ((Float)sprite.angData()).doubleValue();
-					
-					singleBlockObject.put("Rid", Rid);
-					singleBlockObject.put("spriteX", spriteX);
-					singleBlockObject.put("spriteY", spriteY);
-					singleBlockObject.put("spriteAng", (Double)spriteAng);
-					
-					// save block information
-					// casting is due to the types that JSONObjects allow
-					int blockType = block.getBlockType();
-					double blockAngularVelocity = ((Float)block.getAngularVelocity()).doubleValue();
-					Vec2 blockLinearVelocity = block.getLinearVelocity();
-					double blockLinearVelocityX = ((Float)blockLinearVelocity.x).doubleValue();
-					double blockLinearVelocityY = ((Float)blockLinearVelocity.y).doubleValue();
-					Vec2 blockPosition = block.getPosition();
-					double blockPositionX = ((Float)blockPosition.x).doubleValue();
-					double blockPositionY = ((Float)blockPosition.y).doubleValue();
-					double blockRotation = ((Float)block.getRotation()).doubleValue();
-					
-					singleBlockObject.put("blockType", blockType);
-					singleBlockObject.put("blockAngularVelocity", (Double)blockAngularVelocity);
-					singleBlockObject.put("blockLinearVelocityX", (Double)blockLinearVelocityX);
-					singleBlockObject.put("blockLinearVelocityY", (Double)blockLinearVelocityY);
-					singleBlockObject.put("blockPositionX", (Double)blockPositionX);
-					singleBlockObject.put("blockPositionY", (Double)blockPositionY);
-					singleBlockObject.put("blockRotation", (Double)blockRotation);					
-					
-					blockArray.put(singleBlockObject);
-				}
-				// at this point blockArray contains a JSONObject for each block, save it to newSaveObject as "data"
-				newSaveObject.put("data", blockArray);
-				// add the newSaveObject to the main JSONArray at the end
-				saveArray.put(saveArray.length(), newSaveObject);
-				String saveString = saveArray.toString();
-				// Now write to the file
-				FileOutputStream output = openFileOutput("BFJsonSave.dat", Context.MODE_PRIVATE);
-				output.write(saveString.getBytes());
-				output.flush();
-				output.close();
-				Toast.makeText(this, "Game Saved - " + saveName, Toast.LENGTH_SHORT).show();
-			} catch (JSONException | IOException e) {
+				try {
+					// add the name to key "name"
+					newSaveObject.put("name", saveName);
+					// for each block...
+					for (int i=0; i<spriteList.size(); i++) {
+						// each block is represented in the save file as a JSONObject
+						JSONObject singleBlockObject = new JSONObject();
+						// get the corresponding block form the sprite and block lists
+						Sprite sprite = spriteList.get(i);
+						BlockData block = blockList.get(i);
+						int[] spriteData = sprite.data();
+						
+						// save sprite information
+						int Rid = spriteData[0];
+						int spriteX = spriteData[1];
+						int spriteY = spriteData[2];
+						double spriteAng = ((Float)sprite.angData()).doubleValue();
+						
+						singleBlockObject.put("Rid", Rid);
+						singleBlockObject.put("spriteX", spriteX);
+						singleBlockObject.put("spriteY", spriteY);
+						singleBlockObject.put("spriteAng", (Double)spriteAng);
+						
+						// save block information
+						// casting is due to the types that JSONObjects allow
+						int blockType = block.getBlockType();
+						double blockAngularVelocity = ((Float)block.getAngularVelocity()).doubleValue();
+						Vec2 blockLinearVelocity = block.getLinearVelocity();
+						double blockLinearVelocityX = ((Float)blockLinearVelocity.x).doubleValue();
+						double blockLinearVelocityY = ((Float)blockLinearVelocity.y).doubleValue();
+						Vec2 blockPosition = block.getPosition();
+						double blockPositionX = ((Float)blockPosition.x).doubleValue();
+						double blockPositionY = ((Float)blockPosition.y).doubleValue();
+						double blockRotation = ((Float)block.getRotation()).doubleValue();
+						
+						singleBlockObject.put("blockType", blockType);
+						singleBlockObject.put("blockAngularVelocity", (Double)blockAngularVelocity);
+						singleBlockObject.put("blockLinearVelocityX", (Double)blockLinearVelocityX);
+						singleBlockObject.put("blockLinearVelocityY", (Double)blockLinearVelocityY);
+						singleBlockObject.put("blockPositionX", (Double)blockPositionX);
+						singleBlockObject.put("blockPositionY", (Double)blockPositionY);
+						singleBlockObject.put("blockRotation", (Double)blockRotation);					
+						
+						blockArray.put(singleBlockObject);
+					}
+					// at this point blockArray contains a JSONObject for each block, save it to newSaveObject as "data"
+					newSaveObject.put("data", blockArray);
+					// add the newSaveObject to the main JSONArray at the end
+					saveArray.put(saveArray.length(), newSaveObject);
+					String saveString = saveArray.toString();
+					// Now write to the file
+					FileOutputStream output = openFileOutput("BFJsonSave.dat", Context.MODE_PRIVATE);
+					output.write(saveString.getBytes());
+					output.flush();
+					output.close();
+					Toast.makeText(this, "Game Saved - " + saveName, Toast.LENGTH_SHORT).show();
+				} catch (JSONException e) {
+					e.printStackTrace();
+				}		
+			} catch (IOException e) {
 				e.printStackTrace();
-			}			
+			}
 		}
 	}
 	
@@ -433,57 +434,61 @@ public class GameActivity extends FragmentActivity {
 	// We will search the file by gameName parameter
 	public void jsonLoad(String gameName) {
 		try {
-			// Open and read the file, and get the JSONArray
-			File file = getFileStreamPath("BFJsonSave.dat");
-			Scanner scanner = new Scanner(file);
-			StringBuilder builder = new StringBuilder();
-			while (scanner.hasNextLine()) {
-				builder.append(scanner.nextLine());
-			}
-			JSONArray saveArray = new JSONArray(builder.toString());
-			scanner.close();
-			// Loop through all the saved games
-			for (int i=0; i<saveArray.length(); i++) {
-				// If name key matches the game we want load the game
-				JSONObject savedGameObject = saveArray.getJSONObject(i);
-				if (savedGameObject.getString("name").equals(gameName)) {
-					
-					// Get the list of blocks
-					JSONArray blockArray = savedGameObject.getJSONArray("data");
-					// Loop through the blocks and add them to the physics zone then the gameview
-					// Casting here and in save is due to the types that JSONObjects allow
-					for (int ii=0; ii<blockArray.length(); ii++) {
-						JSONObject blockData = blockArray.getJSONObject(ii);
+			try {
+				// Open and read the file, and get the JSONArray
+				File file = getFileStreamPath("BFJsonSave.dat");
+				Scanner scanner = new Scanner(file);
+				StringBuilder builder = new StringBuilder();
+				while (scanner.hasNextLine()) {
+					builder.append(scanner.nextLine());
+				}
+				JSONArray saveArray = new JSONArray(builder.toString());
+				scanner.close();
+				// Loop through all the saved games
+				for (int i=0; i<saveArray.length(); i++) {
+					// If name key matches the game we want load the game
+					JSONObject savedGameObject = saveArray.getJSONObject(i);
+					if (savedGameObject.getString("name").equals(gameName)) {
 						
-						// Get physics data and create the block
-						int blockType = blockData.getInt("blockType");
-						float blockAngularVelocity = ((Double)blockData.getDouble("blockAngularVelocity")).floatValue();
-						float blockLinearVelocityX = ((Double)blockData.getDouble("blockLinearVelocityX")).floatValue();
-						float blockLinearVelocityY = ((Double)blockData.getDouble("blockLinearVelocityY")).floatValue();
-						Vec2 blockLinearVelocity = new Vec2(blockLinearVelocityX, blockLinearVelocityY);
-						float blockPositionX = ((Double)blockData.getDouble("blockPositionX")).floatValue();
-						float blockPositionY = ((Double)blockData.getDouble("blockPositionY")).floatValue();
-						Vec2 blockPosition = new Vec2(blockPositionX, blockPositionY);
-						float blockRotation = ((Double)blockData.getDouble("blockRotation")).floatValue();
-						
-						PhysicsZone.getPhysicsZone().createBlock(blockType, blockPosition, blockRotation, 
-								blockLinearVelocity, blockAngularVelocity);
-						
-						// Get sprite data and create the sprite
-						int Rid = blockData.getInt("Rid");
-						int spriteX = blockData.getInt("spriteX");
-						int spriteY = blockData.getInt("spriteY");
-						float spriteAng = ((Double)blockData.getDouble("spriteAng")).floatValue();
-						
-						Log.d("GameActivity", "Rid: " + Rid + " spriteX: " + spriteX + " spriteY: " + spriteY + " spriteAng: " + spriteAng);
-						if (gameView == null) {
-							Log.d("GameActivity", "gameView is null");
+						// Get the list of blocks
+						JSONArray blockArray = savedGameObject.getJSONArray("data");
+						// Loop through the blocks and add them to the physics zone then the gameview
+						// Casting here and in save is due to the types that JSONObjects allow
+						for (int ii=0; ii<blockArray.length(); ii++) {
+							JSONObject blockData = blockArray.getJSONObject(ii);
+							
+							// Get physics data and create the block
+							int blockType = blockData.getInt("blockType");
+							float blockAngularVelocity = ((Double)blockData.getDouble("blockAngularVelocity")).floatValue();
+							float blockLinearVelocityX = ((Double)blockData.getDouble("blockLinearVelocityX")).floatValue();
+							float blockLinearVelocityY = ((Double)blockData.getDouble("blockLinearVelocityY")).floatValue();
+							Vec2 blockLinearVelocity = new Vec2(blockLinearVelocityX, blockLinearVelocityY);
+							float blockPositionX = ((Double)blockData.getDouble("blockPositionX")).floatValue();
+							float blockPositionY = ((Double)blockData.getDouble("blockPositionY")).floatValue();
+							Vec2 blockPosition = new Vec2(blockPositionX, blockPositionY);
+							float blockRotation = ((Double)blockData.getDouble("blockRotation")).floatValue();
+							
+							PhysicsZone.getPhysicsZone().queueNewBlock(blockType, blockPosition, blockRotation, 
+									blockLinearVelocity, blockAngularVelocity);
+							
+							// Get sprite data and create the sprite
+							int Rid = blockData.getInt("Rid");
+							int spriteX = blockData.getInt("spriteX");
+							int spriteY = blockData.getInt("spriteY");
+							float spriteAng = ((Double)blockData.getDouble("spriteAng")).floatValue();
+							
+							Log.d("GameActivity", "Rid: " + Rid + " spriteX: " + spriteX + " spriteY: " + spriteY + " spriteAng: " + spriteAng);
+							if (gameView == null) {
+								Log.d("GameActivity", "gameView is null");
+							}
+							gameView.spriteList.add(new Sprite(gameView, Rid, spriteX, spriteY, spriteAng));						
 						}
-						gameView.spriteList.add(new Sprite(gameView, Rid, spriteX, spriteY, spriteAng));						
 					}
 				}
-			}
-		} catch (FileNotFoundException | JSONException e) {
+			} catch (FileNotFoundException e) {
+				e.printStackTrace();
+			}		
+		} catch (JSONException e) {
 			e.printStackTrace();
 		}
 	}

@@ -7,6 +7,8 @@ import org.jbox2d.common.Vec2;
 
 import android.content.Context;
 import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Paint;
 import android.os.Bundle;
 import android.os.Parcelable;
 import android.util.AttributeSet;
@@ -63,6 +65,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 	// When the user grabs a block, touchGrabDistance tells the angle of
 	// the grab position relative to the block's center of mass.
 	private float touchGrabAngle = 0;
+	
+	//Putting a new Vec2 to take the place of the above two variables.
+	private Vec2 relativePos = null;
+	
 	// touchBlockID tells which block is currently grabbed.  If no block
 	// is grabbed, the id is -1.  If the camera is grabbed, it has a
 	// special negative number value CAMERA_ID or CAMERA_PINCH_ID
@@ -255,6 +261,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 				}
 			}
 			
+			Paint paint = new Paint();
+			paint.setColor(Color.BLACK);
+			paint.setStrokeWidth(4);
 			canvas.drawColor(skyColor);
 			int count = spriteList.size() - pz.getIncompleteBlockCount();
 			if (count > 0){
@@ -262,6 +271,10 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 					//Log.d("ondraw", "x = "+pz.getBlockPosition(i).x+", y = "+pz.getBlockPosition(i).y);
 					spriteList.get(i).update(pz.getBlockPosition(i), pz.getBlockRotation(i), getHeight(), camera, cameraZoom);
 					spriteList.get(i).Draw(canvas);
+					if(pz.getBlockDest(i) != null){
+						Log.d("ondraw", pz.getBlockPosition(i) + "   " + pz.getBlockDest(i));
+						canvas.drawLine(pz.getBlockPosition(i).x, pz.getBlockPosition(i).y, pz.getBlockDest(i).x, pz.getBlockDest(i).y, paint);
+					}
 				}
 			}
 			
@@ -399,13 +412,12 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 			
 			// if we have touched a block, record the current position
 			if (touchBlockID > -1) {
+				Vec2 relativeGrab = pz.getRelativeDistAndAngle(touchBlockID, touchFingerPosition);
+					
+				/*touchGrabDistance = relativeGrab.x; Taken out for now.
+				touchGrabAngle = relativeGrab.y;*/
 				
-				Vec2 relativeGrab = 
-					pz.getRelativeDistAndAngle(touchBlockID, touchFingerPosition);
-				
-				touchGrabDistance = relativeGrab.x;
-				touchGrabAngle = relativeGrab.y;
-				
+				this.relativePos = new Vec2(relativeGrab.x, relativeGrab.y);
 				
 			} else {
 				// non-block has been grabbed, so that means the camera is grabbed
@@ -432,13 +444,17 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 		return touchFingerPosition;
 	}
 
-	public float getGrabDistance() {
+	public Vec2 getRelativePos() {
+		return relativePos;
+	}
+
+	/*public float getGrabDistance() { Not needed right now
 		return touchGrabDistance;
 	}
 
 	public float getGrabAngle() {
 		return touchGrabAngle;
-	}
+	}*/
 
 	public boolean cameraGrabbed() {
 		return touchBlockID == CAMERA_ID;

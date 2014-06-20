@@ -49,13 +49,13 @@ public class CanvasThread extends Thread {
 			//Try to draw everything on the canvas
 			canvas = SH.lockCanvas(null);
 			synchronized(SH){
+				
 				physics.step();
 				
 				// apply physics pulling effects, if applicable
 				physics.pushBlock(
 						GV.getTouchedBlockID(),
-						GV.getGrabDistance(),
-						GV.getGrabAngle(),
+						GV.getRelativePos(),
 						GV.getFingerPosition()
 						);
 				
