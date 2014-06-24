@@ -4,6 +4,10 @@ package edu.wwu.cs412.blockfort.graphics;
 import java.util.ArrayList;
 
 import org.jbox2d.common.Vec2;
+import org.jbox2d.dynamics.Body;
+import org.jbox2d.dynamics.BodyDef;
+import org.jbox2d.dynamics.joints.MouseJoint;
+import org.jbox2d.dynamics.joints.MouseJointDef;
 
 import android.content.Context;
 import android.graphics.Canvas;
@@ -271,10 +275,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 					//Log.d("ondraw", "x = "+pz.getBlockPosition(i).x+", y = "+pz.getBlockPosition(i).y);
 					spriteList.get(i).update(pz.getBlockPosition(i), pz.getBlockRotation(i), getHeight(), camera, cameraZoom);
 					spriteList.get(i).Draw(canvas);
-					if(pz.getBlockDest(i) != null){
-						Log.d("ondraw", pz.getBlockPosition(i) + "   " + pz.getBlockDest(i));
-						canvas.drawLine(pz.getBlockPosition(i).x, pz.getBlockPosition(i).y, pz.getBlockDest(i).x, pz.getBlockDest(i).y, paint);
-					}
 				}
 			}
 			
@@ -356,6 +356,7 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 	 * touch handler, which checks for touches and then
 	 * applies a force if that touch has grabbed a block
 	 */
+	public MouseJoint mjActive = null;
 	@Override
 	public boolean onTouchEvent(MotionEvent e) {
 
@@ -370,6 +371,11 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
 		if (act == MotionEvent.ACTION_UP || act == MotionEvent.ACTION_CANCEL
 				|| act == MotionEvent.ACTION_POINTER_UP) {
+				if(mjActive != null){
+					pz.physicsWorld.destroyJoint(mjActive);
+					mjActive = null;
+					Log.d("force", "Check Destroyed");
+				}
 				touchBlockID = -1;
 				return false;
 		} else if (act == MotionEvent.ACTION_MOVE) {
@@ -392,6 +398,9 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 				// sets the camera zoom
 				cameraZoom = newZoom;
 				Log.d("CHECK","new zoom: "+cameraZoom);
+			} else if (mjActive != null){
+				Vec2 vec = new Vec2(touchFingerPosition.x, touchFingerPosition.y);
+                mjActive.setTarget(vec);
 			}
 		/* TODO Zoom functionality is incomplete
 		} else if (act == MotionEvent.ACTION_POINTER_DOWN) {
@@ -418,6 +427,15 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 				touchGrabAngle = relativeGrab.y;*/
 				
 				this.relativePos = new Vec2(relativeGrab.x, relativeGrab.y);
+				
+				if(mjActive == null){
+					BodyDef groundBodyDef = new BodyDef();//Set up spot on Block to make joint
+                    groundBodyDef.position.set(relativePos);
+                    Body groundBody = pz.physicsWorld.createBody(groundBodyDef);
+                    //Now we create the joint
+                    mjActive = pz.createMouseJoint(touchBlockID, relativePos.x, relativePos.y);
+                    
+				}
 				
 			} else {
 				// non-block has been grabbed, so that means the camera is grabbed

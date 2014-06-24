@@ -52,13 +52,6 @@ public class CanvasThread extends Thread {
 				
 				physics.step();
 				
-				// apply physics pulling effects, if applicable
-				physics.pushBlock(
-						GV.getTouchedBlockID(),
-						GV.getRelativePos(),
-						GV.getFingerPosition()
-						);
-				
 				GV.destroyOffscreenBlocks();
 				
 				

@@ -20,6 +20,8 @@ package edu.wwu.cs412.blockfort.physics;
 import org.jbox2d.common.Vec2;
 import org.jbox2d.dynamics.Body;
 import org.jbox2d.dynamics.Fixture;
+import org.jbox2d.dynamics.joints.MouseJoint;
+import org.jbox2d.dynamics.joints.MouseJointDef;
 
 import android.graphics.BitmapFactory;
 import android.util.Log;
@@ -81,7 +83,9 @@ public class BlockData {
 	
 	private static final float MAX_PULL_FORCE = 12f;
 	
-	public Vec2 goTo = null;
+	private Vec2 Force = new Vec2(0,0);//These are the three movement variables. I am attempting the midpoint integration method first.
+	private Vec2 acc = new Vec2(0,0);//Second I will try to implement RK4.
+	private Vec2 vel = new Vec2(0,0);
 
 	public BlockData(Body newBody, int blockType) {
 		body = newBody;
@@ -108,113 +112,6 @@ public class BlockData {
 		// other subclasses of BlockData may do something.
 		return;
 	}
-
-	// apply a force to this object.  The force changes
-	// linear and angular velocity based on the mass
-	// of the object and it's current speed.
-	// the force originates in the object's center
-	// of mass.
-	public void push(float xStrength, float yStrength) {
-		push(xStrength, yStrength, 
-				body.getWorldCenter().x,
-				body.getWorldCenter().y);
-	}
-
-	public void push(int xStrength, int yStrength) {
-		push((float)xStrength,(float)yStrength);
-	}
-
-	// apply a force to this object from a specific point
-	public void push(float xStrength, float yStrength, 
-			float xStart, float yStart) {
-		body.applyForce(new Vec2(xStrength,yStrength), 
-				new Vec2(xStart,yStart));
-	}
-	
-	//Push block to a specific point if not there.
-	public void pushTo(Vec2 relPos, Vec2 fingerP){
-		Vec2 bodyPosition = body.getPosition().clone();
-			
-		Vec2 newVec = rotVec(relPos);
-
-		float x = (bodyPosition.x-newVec.x);//Place where you initially touched the block.
-		float y = (bodyPosition.y-newVec.y);//It now takes into account the rotation of the block.
-		
-		Vec2 BlockPos = new Vec2(x,y);
-		
-		//Log.d("CHECK", "HERE AND NOW");
-		
-		if(BlockPos != fingerP) {//This might actually be removable, might not be necessary.
-			Vec2 tmpVec = body.getLinearVelocity();
-			
-			Vec2 Force = new Vec2((fingerP.x-x), (fingerP.y-y));
-			//if(Math.abs(Force.x) + Math.abs(Force.y) < .5 && Math.abs(tmpVec.x)+Math.abs(tmpVec.y) != 0) {//The second part of this if probably needs to be rethought.
-			//Force = tmpVec.negate(); Log.d("newCheck", "THIS "+Force);//This checks where it is already moving and applies an opposite force to stop it moving.
-			//}
-			//else{
-			//Force.normalize();//Makes it a unit vector, i.e. it has a magnitude of 1 now.
-				//Force.mulLocal(5); Can be used to make things move faster and slower
-			//}
-			
-			//body.setGravityScale(0);
-			//body.applyForceToCenter(Force.mul(body.getMass()));
-			//body.applyLinearImpulse(Force.mul(body.getMass()), BlockPos);
-			//body.setGravityScale(1);
-		}
-		
-		goTo = fingerP;
-				
-		body.setLinearVelocity(new Vec2(fingerP.sub(bodyPosition)));
-	}
-	
-	private Vec2 rotVec(Vec2 vec) { //This Method rotates the point and returns the proper relative position.
-		float magnitude = (float) Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2));
-		float angle = (float) Math.atan(vec.y/vec.x);
-		angle -= body.getAngle();//Math is correct, but this could cause problems
-		return new Vec2((float)Math.cos(angle)*magnitude, (float)Math.sin(angle)*magnitude);
-	}
-	
-	/**
-	 * Apply a point on this block at grabP in the direction of fingerP
-	 * 
-	 * @param grabP
-	 * @param fingerP
-	 */
-	public void push(float dist, float angle, Vec2 fingerP) {
-		Vec2 bodyPosition = body.getPosition().clone();
-
-		// placeholder:  this just pulls based on the object's center of mass
-		float x = (fingerP.x-bodyPosition.x);
-		float y = (fingerP.y-bodyPosition.y);
-		
-		double force = Math.sqrt(x*x+y*y);
-		double forceAngle = Math.atan(y/x);
-		float sign = Math.signum(x);
-		if (force > MAX_PUSH_FORCE*MAX_PUSH_FORCE) {
-			// if force is too large, reduce force
-			force = Math.sqrt(force);
-			x = (float)(MAX_PUSH_FORCE*x/force);
-			y = (float)(MAX_PUSH_FORCE*y/force);
-		}
-		
-		Vec2 grabbedPosition = new Vec2(
-				(float)Math.cos(angle)*dist, 
-				(float)Math.sin(angle)*dist
-				);
-		
-
-		body.applyLinearImpulse(
-			new Vec2(
-				(float)(sign*FINGER_FORCE*Math.cos(forceAngle)), 
-				(float)(sign*FINGER_FORCE*Math.sin(forceAngle))
-			), 
-			new Vec2(
-					bodyPosition.x + grabbedPosition.x,
-					bodyPosition.y + grabbedPosition.y
-					)
-			);
-	}
-
 	// causes the object to move at a certain speed.
 	// ignores mass and inertia:  Whatever the object is,
 	// and whatever it was doing before, now it will be
@@ -261,6 +158,10 @@ public class BlockData {
 		return blockType;
 	}
 	
+	public Body getBody() {
+		return this.body;
+	}
+	
 	public boolean testPoint(Vec2 p) {
 		for (Fixture f = body.getFixtureList(); f != null; f = f.getNext()) {
 			if (f.testPoint(p)) {
@@ -280,12 +181,11 @@ public class BlockData {
 	 */
 	public Vec2 getRelativeDistAndAngle(Vec2 worldPoint) {
 		Vec2  relativePoint = body.getPosition().clone();
-
 		
 		// initially, we get the location of worldPoint relative to
 		// the middle of this block.
-		relativePoint.x -= worldPoint.x;
-		relativePoint.y -= worldPoint.y;
+		relativePoint.x = worldPoint.x - relativePoint.x;
+		relativePoint.y = worldPoint.y - relativePoint.y;
 
 		// take the position on this block where the worldPoint is touching.
 		// now rotate the shape, along with this point, back to it's default

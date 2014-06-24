@@ -25,6 +25,8 @@ import org.jbox2d.dynamics.BodyDef;
 import org.jbox2d.dynamics.BodyType;
 import org.jbox2d.dynamics.FixtureDef;
 import org.jbox2d.dynamics.World;
+import org.jbox2d.dynamics.joints.MouseJoint;
+import org.jbox2d.dynamics.joints.MouseJointDef;
 
 import edu.wwu.cs412.blockfort.graphics.GameView;
 import edu.wwu.cs412.blockfort.graphics.Sprite;
@@ -35,7 +37,7 @@ public class PhysicsZone {
 	
 	private static  PhysicsZone physics = null;
 	
-	private World physicsWorld;
+	public World physicsWorld;//This is public now for the joint
 	
 	private static final Vec2 BASIC_GRAVITY = new Vec2(0,-10);
 
@@ -57,7 +59,7 @@ public class PhysicsZone {
 	 * encased in perfectly clear glass.
 	 * 
 	 */
-	public static final float SCALING = 80f;
+	public static final float SCALING = 58f;
 	
 	private Body ground;
 	
@@ -433,9 +435,9 @@ public class PhysicsZone {
 		} else if (shapeTypeID == BlockData.BLOCK_SHAPE_TRIANGLE) {
 			// creates an equilateral triangle
 			Vec2[] vertices = {
-					new Vec2(  sm * 0,  sm * 0.433f),
-					new Vec2(  sm * 2/4,  sm * -0.433f),
-					new Vec2(  sm * -2/4f,  sm * -0.433f)
+					new Vec2(  sm * 0,  sm * 0.649f),
+					new Vec2(  sm * 3/4,  sm * -0.649f),
+					new Vec2(  sm * -3/4f,  sm * -0.649f)
 			};
 				
 			// creates shapes
@@ -591,8 +593,8 @@ public class PhysicsZone {
 		return blockList.size();
 	}
 	
-	public Vec2 getBlockDest(int blockID) {
-		return blockList.get(blockID).goTo;
+	public BlockData getBlock(int BlockID) {
+		return this.blockList.get(BlockID);
 	}
 	
 	/**
@@ -633,7 +635,7 @@ public class PhysicsZone {
 	public boolean pushBlock(int blockID, Vec2 relativeVec, Vec2 fingerP) {
 
 		if (blockID > -1 && !midStep) {
-			blockList.get(blockID).pushTo(relativeVec, fingerP);
+			//blockList.get(blockID).pushTo(relativeVec, fingerP);
 			return true;
 		}
 		return false;
@@ -646,6 +648,47 @@ public class PhysicsZone {
 	public static Vec2 getGravity() {
 		return BASIC_GRAVITY;
 	}
+	
+	//This is the mouseJoint method, for movement.
+	public MouseJoint createMouseJoint(int BlockID, float x, float y) {
+		Body boxBody = this.getBlock(BlockID).getBody();
+		
+		Vec2 v = boxBody.getPosition().add(new Vec2(x,y));
+		if(checkDist(boxBody.getPosition(), v)) {//Check description of checkDist below
+			Log.d("force", "THIS WENT");
+			v = boxBody.getPosition();
+		}
+
+	    MouseJointDef mjd = new MouseJointDef();
+	    mjd.bodyA               = boxBody;
+	    mjd.bodyB               = boxBody;
+	    mjd.dampingRatio        = 10f;
+	    mjd.frequencyHz         = 10;
+	    mjd.maxForce            = (float) (100.0f * boxBody.getMass());
+	    mjd.collideConnected    = true;
+	    mjd.target.set(v);
+	    return (MouseJoint) this.physicsWorld.createJoint(mjd);
+	}
+	
+	/* The idea here is that pressing on the edges lets you grab the edge of a shape, but if you grab on the center it should
+	 * grab the center of the object, for higher accuracy. 
+	 */
+	private boolean checkDist(Vec2 center, Vec2 Dist) { //I stopped here
+		if(Dist.x > center.x - .5 && Dist.x < center.x + .5) {
+			if(Dist.y < center.y + .5 && Dist.y > center.y - .5){
+				return true;
+			}
+		}
+		return false;
+	}
+	
+	//This method is apparently not needed, but I'll leave it in comments just in case.
+	/*private Vec2 rotVec(Vec2 vec, int BlockID) { //This Method rotates the point and returns the proper relative position.
+		float magnitude = (float) Math.sqrt(Math.pow(vec.x, 2) + Math.pow(vec.y, 2));
+		float angle = (float) Math.atan(vec.y/vec.x);
+		angle -= this.getBlockRotation(BlockID);//Math is correct, but this could cause problems
+		return new Vec2((float)Math.cos(angle)*magnitude, (float)Math.sin(angle)*magnitude);
+	}*/
 	
 	
 }
