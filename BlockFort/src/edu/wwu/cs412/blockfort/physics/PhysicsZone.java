@@ -632,12 +632,25 @@ public class PhysicsZone {
 	 * @param grabP Position on the block where it is grabbed
 	 * @param fingerP Position in the world where finger is
 	 */
+	private MouseJoint mjActive = null;
 	public boolean pushBlock(int blockID, Vec2 relativeVec, Vec2 fingerP) {
-
-		if (blockID > -1 && !midStep) {
-			//blockList.get(blockID).pushTo(relativeVec, fingerP);
+		if (blockID > -1 && !midStep) {//If you are touching a block run
+			if(mjActive == null) {//If the joint doesn't exist yet do this
+				//create the joint
+                mjActive = this.createMouseJoint(blockID, relativeVec.x, relativeVec.y);
+			}
+			else {
+				Vec2 vec = new Vec2(fingerP.x, fingerP.y);
+                mjActive.setTarget(vec);
+                Log.d("force", "This went?");
+			}
 			return true;
 		}
+		if(mjActive != null){
+			this.physicsWorld.destroyJoint(mjActive);
+			Log.d("force", "Check Destroyed");
+		}
+		mjActive = null;
 		return false;
 	}
 	

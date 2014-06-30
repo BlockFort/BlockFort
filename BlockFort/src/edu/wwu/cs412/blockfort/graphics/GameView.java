@@ -356,10 +356,8 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 	 * touch handler, which checks for touches and then
 	 * applies a force if that touch has grabbed a block
 	 */
-	public MouseJoint mjActive = null;
 	@Override
 	public boolean onTouchEvent(MotionEvent e) {
-
 		// get the position touched, corrected for zoom and camera displacement
 		touchFingerPosition = new Vec2(
 				(e.getX()/cameraZoom + camera.x)/PhysicsZone.SCALING, 
@@ -371,11 +369,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 
 		if (act == MotionEvent.ACTION_UP || act == MotionEvent.ACTION_CANCEL
 				|| act == MotionEvent.ACTION_POINTER_UP) {
-				if(mjActive != null){
-					pz.physicsWorld.destroyJoint(mjActive);
-					mjActive = null;
-					Log.d("force", "Check Destroyed");
-				}
 				touchBlockID = -1;
 				return false;
 		} else if (act == MotionEvent.ACTION_MOVE) {
@@ -398,9 +391,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 				// sets the camera zoom
 				cameraZoom = newZoom;
 				Log.d("CHECK","new zoom: "+cameraZoom);
-			} else if (mjActive != null){
-				Vec2 vec = new Vec2(touchFingerPosition.x, touchFingerPosition.y);
-                mjActive.setTarget(vec);
 			}
 		/* TODO Zoom functionality is incomplete
 		} else if (act == MotionEvent.ACTION_POINTER_DOWN) {
@@ -428,15 +418,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 				
 				this.relativePos = new Vec2(relativeGrab.x, relativeGrab.y);
 				
-				if(mjActive == null){
-					BodyDef groundBodyDef = new BodyDef();//Set up spot on Block to make joint
-                    groundBodyDef.position.set(relativePos);
-                    Body groundBody = pz.physicsWorld.createBody(groundBodyDef);
-                    //Now we create the joint
-                    mjActive = pz.createMouseJoint(touchBlockID, relativePos.x, relativePos.y);
-                    
-				}
-				
 			} else {
 				// non-block has been grabbed, so that means the camera is grabbed
 				if (vt == null) {
@@ -447,7 +428,6 @@ public class GameView extends SurfaceView implements SurfaceHolder.Callback {
 				vt.addMovement(e);
 				touchBlockID = CAMERA_ID;
 				touchGrabPosition = touchFingerPosition.clone();
-			
 			}
 		}
 		

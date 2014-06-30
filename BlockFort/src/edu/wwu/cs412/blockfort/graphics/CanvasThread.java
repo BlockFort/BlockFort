@@ -52,9 +52,9 @@ public class CanvasThread extends Thread {
 				
 				physics.step();
 				
+				physics.pushBlock(GV.getTouchedBlockID(), GV.getRelativePos(), GV.getFingerPosition());
+				
 				GV.destroyOffscreenBlocks();
-				
-				
 				//TODO game-logic should update after each physics step
 				// for example, blocks that are too far in any direction 
 				// should vanish (the physics does not do this automatically).  

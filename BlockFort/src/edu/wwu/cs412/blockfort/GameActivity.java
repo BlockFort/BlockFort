@@ -82,6 +82,8 @@ public class GameActivity extends FragmentActivity {
 	int draggedBlockDrawable;
 
 	int Load;
+	
+	private String gameName = "lllff";//something random that it will never be.
 
 	@Override
 	protected void onCreate(Bundle savedInstanceState) {
@@ -352,7 +354,6 @@ public class GameActivity extends FragmentActivity {
 					}
 				} catch (JSONException e) {
 					e.printStackTrace();
-					
 				}
 			// Otherwise, the array will be a new JSONArray
 			} else {
@@ -362,8 +363,13 @@ public class GameActivity extends FragmentActivity {
 			JSONObject newSaveObject = new JSONObject();
 			// blockArray is the array of blocks for the current game
 			JSONArray blockArray = new JSONArray();
-			// Files will be saved as SaveGameN where n=the count of saved games
-			String saveName = String.format("SaveGame%3d", saveArray.length()+1);
+			String saveName;
+			if(!gameName.contains("SaveGame")){
+				// Files will be saved as SaveGameN where n=the count of saved games
+				saveName = String.format("SaveGame%3d", saveArray.length()+1);
+			} else {
+				saveName = gameName;
+			}
 			try {
 				try {
 					// add the name to key "name"
@@ -449,7 +455,7 @@ public class GameActivity extends FragmentActivity {
 					// If name key matches the game we want load the game
 					JSONObject savedGameObject = saveArray.getJSONObject(i);
 					if (savedGameObject.getString("name").equals(gameName)) {
-						
+						this.gameName = gameName;
 						// Get the list of blocks
 						JSONArray blockArray = savedGameObject.getJSONArray("data");
 						// Loop through the blocks and add them to the physics zone then the gameview
@@ -490,42 +496,6 @@ public class GameActivity extends FragmentActivity {
 			}		
 		} catch (JSONException e) {
 			e.printStackTrace();
-		}
-	}
-	
-	public void Save(){
-		ArrayList<Sprite> Slist = gameView.SaveData();
-		ArrayList<BlockData> Blist = PhysicsZone.getPhysicsZone().saveData();
-		if(Slist.size() > 0){
-			try{
-				FileOutputStream fos = openFileOutput("BFdata.dat", Context.MODE_PRIVATE);//Create a new File Output Stream
-				ObjectOutputStream oos = null;
-				try {
-					oos = new ObjectOutputStream(fos);
-					oos.writeInt(Slist.size());	
-					//Log.d("CHECK", "GOT HERE  " + Slist.size());
-					for(Sprite s : Slist){
-						int[] dat = s.data();
-						float ang = s.angData();
-						for(int i = 0; i < 3; i++){
-							oos.writeInt(dat[i]);//Writes the objects
-						}
-						oos.writeFloat(ang);
-					}
-					oos.writeInt(Blist.size());
-					for(BlockData bd : Blist){
-						//oos.writeObject(bd);
-					}
-					oos.flush();//Flush the stream
-					oos.close();//Close the stream
-					Toast.makeText(this, "Save Complete", Toast.LENGTH_SHORT).show();
-				} catch (IOException e) {
-					// TODO Auto-generated catch block
-					e.printStackTrace();
-				}
-			} catch (FileNotFoundException e){
-				
-			}
 		}
 	}
 	
@@ -642,31 +612,5 @@ public class GameActivity extends FragmentActivity {
 			return true;
 		}
 
-	}
-	
-	public void Load(){
-		try {
-			FileInputStream fis = openFileInput("BFdata.dat");//This is all very similar to Save, just input instead of output.
-			ObjectInputStream ois;
-			try {
-				ois = new ObjectInputStream(fis);
-				int spriteSize = ois.readInt();
-				for(int i = 0; i < spriteSize; i++){
-					gameView.spriteList.add(new Sprite(gameView, ois.readInt(), ois.readInt(), ois.readInt(), ois.readFloat()));//Reads Rid, than x, y and finally angle.
-				}
-				ois.close();
-				Toast.makeText(this, "Load Complete", Toast.LENGTH_SHORT).show();
-			} catch (StreamCorruptedException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-		
 	}
 }
